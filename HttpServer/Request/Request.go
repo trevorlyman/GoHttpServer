@@ -9,20 +9,26 @@ type Request struct {
 	raw []byte
 	valid bool
 	rType string
-	headersMap map[string]string
-
 	path  string
+	headersMap map[string]string
 }
 
 func NewRequest(raw []byte) Request {
 	r := Request{}
 	r.raw = raw
 	r.valid = true
+	r.headersMap = make(map[string]string)
+
+
 	r.parseRaw()
 	return r
 }
 
-func (r Request) parseRaw() {
+func (r *Request) Path() string {
+	return r.path
+}
+
+func (r *Request) parseRaw() {
 	s := string(r.raw)
 	s = strings.Replace(s, "\r", "", -1)
 	headers := strings.Split(s, "\n")

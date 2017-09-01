@@ -48,12 +48,12 @@ func (s HttpServer) handleConn(conn net.Conn) {
 		return
 	}
 	_ = n
-	//fmt.Print("Read " + strconv.Itoa(n) + " bytes\n\n")
+
 
 	request := Request.NewRequest(buf)
 
 	response := Response.NewResponse(request)
+	response.Send(conn)
 
-	conn.Write(response.Raw)
 	conn.Close()
 }
