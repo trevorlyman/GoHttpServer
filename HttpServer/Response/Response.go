@@ -12,8 +12,12 @@ import (
 )
 
 const WWW_FOLDER = "www"
+const MESSAGE_404_PATH = "messages/404.html"
+const MESSAGE_403_PATH = "messages/403.html"
+const MESSAGE_500_PATH = "messages/500.html"
 
 type Response struct {
+	request Request.Request
 	headers string
 	systemPath string
 	responseCode string
@@ -26,7 +30,7 @@ func NewResponse(request Request.Request) Response {
 	// Todo: Look at the Request in order to construct the response
 	_ = request
 	r := Response{}
-
+	r.request = request
 
 	code := "200"
 	_ = code
@@ -39,25 +43,34 @@ func NewResponse(request Request.Request) Response {
 
 	file, err := os.Open(r.systemPath)
 
-
-	defer file.Close()
 	if err != nil {
+
 		if strings.Contains(err.Error(), "The system cannot find the file specified") {
 			code = "404 Not Found"
+			r.systemPath = MESSAGE_404_PATH
 		}else if strings.Contains(err.Error(), "ermission") {
 			code = "403 Forbidden"
+			r.systemPath = MESSAGE_403_PATH
 		}else {
 			code = "500 Server Error"
+			r.systemPath = MESSAGE_500_PATH
 		}
-	}else {
-		// Get content info
 
-		//ext := r.systemPath[strings.LastIndex(r.systemPath, "."):]
-		ext := getExt(r.systemPath)
-		r.mimeType = mime.TypeByExtension(ext)
-		fi, _ := file.Stat()
-		r.contentLength = fi.Size()
+		file.Close()
+		file, err = os.Open(r.systemPath)
+		if err != nil {
+			fmt.Println("Error file not found: " + r.systemPath)
+			os.Exit(0)
+		}
 	}
+
+
+	// Get content info
+	ext := getExt(r.systemPath)
+	r.mimeType = mime.TypeByExtension(ext)
+	fi, _ := file.Stat()
+	r.contentLength = fi.Size()
+
 
 	r.responseCode = "HTTP/1.1 " + code
 	contentLengthText := "Content-Length: " + strconv.Itoa(int(r.contentLength))
@@ -82,6 +95,8 @@ func getSystemPath(requestPath string) string{
 		path = "/index.html"
 	} else if ext == "" {
 		path = requestPath + ".html"
+	} else {
+		path = requestPath
 	}
 	return WWW_FOLDER + path
 
