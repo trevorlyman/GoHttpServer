@@ -11,6 +11,8 @@ import (
 	"fmt"
 )
 
+const WWW_FOLDER = "www"
+
 type Response struct {
 	headers string
 	systemPath string
@@ -32,7 +34,7 @@ func NewResponse(request Request.Request) Response {
 	// 200, 403, 404, 500
 
 	// can the file be found?
-	r.systemPath = "www" + request.Path()
+	r.systemPath = getSystemPath(request.Path())
 
 
 	file, err := os.Open(r.systemPath)
@@ -50,7 +52,8 @@ func NewResponse(request Request.Request) Response {
 	}else {
 		// Get content info
 
-		ext := r.systemPath[strings.LastIndex(r.systemPath, "."):]
+		//ext := r.systemPath[strings.LastIndex(r.systemPath, "."):]
+		ext := getExt(r.systemPath)
 		r.mimeType = mime.TypeByExtension(ext)
 		fi, _ := file.Stat()
 		r.contentLength = fi.Size()
@@ -69,6 +72,29 @@ func NewResponse(request Request.Request) Response {
 	r.headers = buf.String()
 
 	return r
+}
+
+func getSystemPath(requestPath string) string{
+	ext := getExt(requestPath)
+	var path string
+	// Add ".html" to any request without an extension
+	if requestPath == "/" {
+		path = "/index.html"
+	} else if ext == "" {
+		path = requestPath + ".html"
+	}
+	return WWW_FOLDER + path
+
+}
+
+func getExt(s string) string {
+	index := strings.LastIndex(s, ".")
+	var ext string
+	if index != -1 {
+		ext = s[index:]
+	}
+	// else ""
+	return ext
 }
 
 func (r *Response) Send(conn net.Conn) {
