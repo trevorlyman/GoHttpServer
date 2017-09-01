@@ -5,6 +5,7 @@ import (
 )
 
 func main() {
+	port := "8080"
 	server := HttpServer.HttpServer{}
-	server.Run("8080")
+	server.Run(port)
 }

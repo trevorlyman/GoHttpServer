@@ -15,7 +15,7 @@ type HttpServer struct {
 
 func (s HttpServer) Run(port string) {
 	port = ":" + port
-	fmt.Println("Startting Http Server on Port " + port)
+	fmt.Println("Starting Http Server on Port " + port)
 
 	tcpData, err := net.ResolveTCPAddr("tcp4", port)
 	if err != nil {
