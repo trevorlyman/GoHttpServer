@@ -133,11 +133,13 @@ func (r *Response) Send(conn net.Conn) {
 			fmt.Println(err.Error())
 			break
 		}
-		s := string(buf)
-		l := len(s)
-		_ = s
-		_ = l
-		conn.Write(buf)
+
+		 _, writeErr := conn.Write(buf)
+
+		 if writeErr != nil {
+			fmt.Print(writeErr.Error())
+			break
+		 }
 		n, err = file.Read(buf)
 	}
 
