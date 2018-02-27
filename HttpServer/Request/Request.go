@@ -47,6 +47,7 @@ func (r *Request) parseRaw() {
 
 	// Get path
 	path := strings.Split(s, " ")[1]
+	path = strings.Split(path, "?")[0]
 	if (strings.Index(path, "/") == 0) { // path must start with '/'
 		r.path = path
 	}
@@ -64,5 +65,8 @@ func (r *Request) parseRaw() {
 
 		r.headersMap[key] = value
 	}
+
+	// Todo: Add parsing of GET parameters
+
 }
 

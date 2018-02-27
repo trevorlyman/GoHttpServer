@@ -28,7 +28,6 @@ type Response struct {
 
 func NewResponse(request Request.Request) Response {
 	// Todo: Look at the Request in order to construct the response
-	_ = request
 	r := Response{}
 	r.request = request
 

@@ -33,8 +33,6 @@ func (s HttpServer) Run(port string) {
 		}
 
 		go s.handleConn(conn)
-		fmt.Println("Handling new connection")
-
 	}
 
 }
