@@ -1,7 +1,6 @@
 package Request
 
 import (
-	//"../Response"
 	"strings"
 )
 
@@ -18,7 +17,6 @@ func NewRequest(raw []byte) Request {
 	r.raw = raw
 	r.valid = true
 	r.headersMap = make(map[string]string)
-
 
 	r.parseRaw()
 	return r

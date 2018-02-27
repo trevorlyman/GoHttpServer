@@ -11,10 +11,13 @@ import (
 	"fmt"
 )
 
-const WWW_FOLDER = "www"
-const MESSAGE_404_PATH = "messages/404.html"
-const MESSAGE_403_PATH = "messages/403.html"
-const MESSAGE_500_PATH = "messages/500.html"
+const (
+	// Todo folder const should be moved to the HttpServer level
+	WWW_FOLDER = "www"
+	MESSAGE_404_PATH = "messages/404.html"
+	MESSAGE_403_PATH = "messages/403.html"
+	MESSAGE_500_PATH = "messages/500.html"
+)
 
 type Response struct {
 	request Request.Request
@@ -27,19 +30,15 @@ type Response struct {
 
 
 func NewResponse(request Request.Request) Response {
-	// Todo: Look at the Request in order to construct the response
 	r := Response{}
 	r.request = request
 
-	code := "200"
-	_ = code
-	// What code to use?
-	// 200, 403, 404, 500
+	// Assume the request is 200 OK unless proven wrong
+	code := "200 OK"
 
-	// can the file be found?
+
+	// Can the file be found?
 	r.systemPath = getSystemPath(request.Path())
-
-
 	file, err := os.Open(r.systemPath)
 
 	if err != nil {
@@ -47,7 +46,7 @@ func NewResponse(request Request.Request) Response {
 		if strings.Contains(err.Error(), "The system cannot find the file specified") {
 			code = "404 Not Found"
 			r.systemPath = MESSAGE_404_PATH
-		}else if strings.Contains(err.Error(), "ermission") {
+		}else if strings.Contains(strings.ToLower(err.Error()), "permission") {
 			code = "403 Forbidden"
 			r.systemPath = MESSAGE_403_PATH
 		}else {
@@ -56,10 +55,15 @@ func NewResponse(request Request.Request) Response {
 		}
 
 		file.Close()
+
+		// If the html error file is not found
 		file, err = os.Open(r.systemPath)
 		if err != nil {
 			fmt.Println("Error file not found: " + r.systemPath)
-			os.Exit(0)
+
+			// Todo: This is a bit harsh to close the program after not finding an error file,
+			// refactor so that NewResponse returns (Response, error).
+			os.Exit(1)
 		}
 	}
 
@@ -71,15 +75,17 @@ func NewResponse(request Request.Request) Response {
 	r.contentLength = fi.Size()
 
 
-	r.responseCode = "HTTP/1.1 " + code
+	r.responseCode = "HTTP/1.0 " + code
 	contentLengthText := "Content-Length: " + strconv.Itoa(int(r.contentLength))
 
 	// Build full headers
+	endl := "\r\n"
+
 	buf := bytes.NewBufferString("")
-	buf.WriteString(r.responseCode + "\r\n")
-	buf.WriteString(contentLengthText + "\r\n")
-	buf.WriteString("content-type: " + r.mimeType + "\r\n")
-	buf.WriteString("\r\n")
+	buf.WriteString(r.responseCode + endl)
+	buf.WriteString(contentLengthText + endl)
+	buf.WriteString("content-type: " + r.mimeType + endl)
+	buf.WriteString(endl)
 
 	r.headers = buf.String()
 
@@ -89,6 +95,7 @@ func NewResponse(request Request.Request) Response {
 func getSystemPath(requestPath string) string{
 	ext := getExt(requestPath)
 	var path string
+
 	// Add ".html" to any request without an extension
 	if requestPath == "/" {
 		path = "/index.html"
@@ -107,7 +114,7 @@ func getExt(s string) string {
 	if index != -1 {
 		ext = s[index:]
 	}
-	// else ""
+
 	return ext
 }
 
@@ -120,10 +127,9 @@ func (r *Response) Send(conn net.Conn) {
 		return
 	}
 
-
 	// Send headers on the connection, read the file into the connection
 	conn.Write([]byte(r.headers))
-	//index := 0
+
 	buf := make([]byte, 1024)
 
 	n, err := file.Read(buf)
